@@ -36,17 +36,19 @@ public class Renderer implements GLEventListener, KeyListener {
 		// Ensure matrix mode is set to model view
 		gl.glMatrixMode(GL2.GL_MODELVIEW);
 		gl.glLoadIdentity();
+
 		// Set viewpoint depending on user input
 		setViewPoint(gl);
+
 		// Draw origin locator
-		locator.draw(gl, glu, quadric);
+		locator.draw(gl, glu, quadric, filled);
 
 		// Set up rendering style
 		int style = filled ? GLU.GLU_FILL : GLU.GLU_LINE;
 		glu.gluQuadricDrawStyle(quadric, style);
 
 		// Draw everything here
-		submarine.draw(gl, glu, quadric);
+		submarine.draw(gl, glu, quadric, filled);
 
 		gl.glFlush();
 	}
@@ -120,7 +122,7 @@ public class Renderer implements GLEventListener, KeyListener {
 
 		frame.add(canvas);
 
-		frame.setSize(500, 500);
+		frame.setSize(750, 750);
 		final FPSAnimator animator = new FPSAnimator(canvas, 60);
 		frame.addWindowListener(new WindowAdapter() {
 			@Override

@@ -9,5 +9,5 @@ import com.jogamp.opengl.glu.GLUquadric;
  * This Interface specifies the common methods that all drawable objects must have.
  */
 public interface Drawable {
-    void draw(GL2 gl2, GLU glu, GLUquadric quadric);
+    void draw(GL2 gl2, GLU glu, GLUquadric quadric, boolean filled);
 }

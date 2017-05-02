@@ -12,10 +12,10 @@ import com.jogamp.opengl.glu.GLUquadric;
 class Origin implements Drawable {
     private static final float LINE_SIZE = 6;
 
-    public void draw(GL2 gl, GLU glu, GLUquadric quadric) {
+    public void draw(GL2 gl, GLU glu, GLUquadric quadric, boolean filled) {
         // Draw ball
         gl.glColor3f(1,1,1);
-        glu.gluSphere(quadric, 0.05f,20,10); // 30 slices and stacks
+        glu.gluSphere(quadric, 0.05f,20,10);
 
         gl.glBegin(GL.GL_LINES);
             // Draw y line

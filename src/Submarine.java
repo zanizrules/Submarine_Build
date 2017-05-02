@@ -12,40 +12,41 @@ import com.jogamp.opengl.util.gl2.GLUT;
 public class Submarine implements Drawable {
 
     private SubmarineComponent root;
-    private double radius, height;
 
     Submarine(float size) {
-        radius = size * 0.4;
-        height = size * 0.25;
+        double radius = size * 0.4;
+        double height = size * 0.25;
 
-        root = new SubmarineBody(radius, height, RotationAxis.X);
+        root = new SubmarineBody(radius, height, ROTATION_AXIS.X);
 
-        SubmarineSail sail = new SubmarineSail(radius, height, RotationAxis.X);
-        sail.setTranslations(0, (9*height)/10, 0);
+        // Sail -> Child of root/body
+        SubmarineSail sail = new SubmarineSail(radius, height, ROTATION_AXIS.X);
+        sail.setTranslations(0, (7.5* height)/10, 0);
         sail.setRotation(-90);
 
-        SubmarinePeriscope periscope = new SubmarinePeriscope(radius, height, RotationAxis.X);
-        periscope.setTranslations(0, 0, height/3);
-        sail.setRotation(-90);
-
-        SubmarinePeriscope periscopePart = new SubmarinePeriscope(radius, height, RotationAxis.Y);
-        periscopePart.setTranslations(radius/15,0, height/2);
+        // Periscope -> Child of Sail
+        SubmarinePeriscope periscope = new SubmarinePeriscope(radius, height, ROTATION_AXIS.X);
+        periscope.setTranslations(0, 0, (2.5* height)/10);
+        SubmarinePeriscope periscopeExtension = new SubmarinePeriscope(radius, height, ROTATION_AXIS.X);
+        periscopeExtension.setTranslations(0,0, height/3);
+        periscope.addChild(periscopeExtension);
+        SubmarinePeriscope periscopePart = new SubmarinePeriscope(radius, height, ROTATION_AXIS.Y);
+        periscopePart.setTranslations(radius /15,0, height /2);
         periscopePart.setRotation(-90);
-        periscope.addChild(periscopePart);
+        periscopeExtension.addChild(periscopePart);
         sail.addChild(periscope);
 
         root.addChild(sail);
 
-        SubmarineConnector connector = new SubmarineConnector(radius, height, RotationAxis.Y);
+        // Propeller -> Propeller is the child of a connector which is the child of root
+        SubmarineConnector connector = new SubmarineConnector(radius, height, ROTATION_AXIS.Y);
         connector.setRotation(90);
-        connector.setTranslations((9*radius)/10, 0, 0);
-
-        SubmarinePropeller propeller1 = new SubmarinePropeller(radius, height, RotationAxis.Y);
-        propeller1.setTranslations(0, 0, radius/4);
+        connector.setTranslations((9* radius)/10, 0, 0);
+        SubmarinePropeller propeller1 = new SubmarinePropeller(radius, height, ROTATION_AXIS.Y);
+        propeller1.setTranslations(0, 0, radius /4);
         connector.addChild(propeller1);
-
-        SubmarinePropeller propeller2 = new SubmarinePropeller(radius, height, RotationAxis.Z);
-        propeller2.setTranslations(0, 0, radius/4);
+        SubmarinePropeller propeller2 = new SubmarinePropeller(radius, height, ROTATION_AXIS.Z);
+        propeller2.setTranslations(0, 0, radius /4);
         propeller2.setRotation(90);
         connector.addChild(propeller2);
 
@@ -53,27 +54,22 @@ public class Submarine implements Drawable {
     }
 
     @Override
-    public void draw(GL2 gl2, GLU glu, GLUquadric quadric) {
-        root.draw(gl2, glu, quadric);
+    public void draw(GL2 gl2, GLU glu, GLUquadric quadric, boolean filled) {
+        root.draw(gl2, glu, quadric, filled);
     }
 
     private class SubmarineBody extends SubmarineComponent {
 
-        SubmarineBody(double radius, double height, RotationAxis axis) {
+        SubmarineBody(double radius, double height, ROTATION_AXIS axis) {
             super(radius, height, axis);
         }
 
         @Override
-        void drawNode (GL2 gl2, GLU glu, GLUquadric quadric){
+        void drawNode (GL2 gl2, GLU glu, GLUquadric quadric, boolean filled){
             gl2.glPushMatrix();
-            // Set component colour
-            gl2.glColor3f(1,0.2f,0);
-
-            // Set the size of the component (X, Y, Z)
-            gl2.glScaled(radius, height, height);
-
-            // Draw the component
-            glu.gluSphere(quadric,1,25,20);
+                gl2.glColor3f(1,0.2f,0);
+                gl2.glScaled(radius, height, height);
+                glu.gluSphere(quadric,1,25,20);
             gl2.glPopMatrix();
         }
     }
@@ -82,94 +78,76 @@ public class Submarine implements Drawable {
 
         private GLUT glut;
 
-        SubmarineConnector(double radius, double height, RotationAxis axis) {
+        SubmarineConnector(double radius, double height, ROTATION_AXIS axis) {
             super(radius, height, axis);
             glut = new GLUT();
         }
 
         @Override
-        void drawNode(GL2 gl2, GLU glu, GLUquadric quadric) {
+        void drawNode(GL2 gl2, GLU glu, GLUquadric quadric, boolean filled) {
             gl2.glPushMatrix();
-            // Set component colour
-            gl2.glColor3f(1,0.05f,0);
+                // Draw Cylinder
+                gl2.glColor3f(1,0.05f,0);
+                gl2.glScaled(height/5, height/5, radius/4);
+                glu.gluCylinder(quadric, 1, 1, 1, 5, 5);
 
-            // Set the size of the component (X, Y, Z)
-            gl2.glScaled(height/5, height/5, radius/4);
-
-            // Draw the component
-            glu.gluCylinder(quadric, 1, 1, 1, 5, 5);
-
-            gl2.glTranslated(0, 0, height*3);
-
-            gl2.glColor3f(1,0.25f,0);
-            glut.glutSolidCone(1.5f,0.75f,5,5);
+                // Draw Cone
+                gl2.glTranslated(0, 0, height*3); // Move
+                gl2.glColor3f(1,0.25f,0);
+                if(filled) {
+                    glut.glutSolidCone(1.5f,0.75f,5,5);
+                } else {
+                    glut.glutWireCone(1.5f,0.75f,5,5);
+                }
             gl2.glPopMatrix();
         }
     }
 
     private class SubmarinePeriscope extends SubmarineComponent {
 
-        SubmarinePeriscope(double radius, double height, RotationAxis axis) {
+        SubmarinePeriscope(double radius, double height, ROTATION_AXIS axis) {
             super(radius, height, axis);
         }
 
         @Override
-        void drawNode (GL2 gl2, GLU glu, GLUquadric quadric){
+        void drawNode (GL2 gl2, GLU glu, GLUquadric quadric, boolean filled){
             gl2.glPushMatrix();
-            // Set component colour
-            gl2.glColor3f(1,0.25f,0);
-
-            // Set the size of the component (X, Y, Z)
-            gl2.glScaled(radius/15, radius/15, height/2);
-
-            // Draw the component
-            glu.gluCylinder(quadric, 1, 1, 1,8, 6);
+                gl2.glColor3f(1,0.25f,0);
+                gl2.glScaled(radius/15, radius/15, height/2);
+                glu.gluCylinder(quadric, 1, 1, 1,8, 6);
             gl2.glPopMatrix();
         }
     }
 
     private class SubmarinePropeller extends SubmarineComponent {
 
-        SubmarinePropeller(double radius, double height, RotationAxis axis) {
+        SubmarinePropeller(double radius, double height, ROTATION_AXIS axis) {
             super(radius, height, axis);
         }
 
         @Override
-        void drawNode(GL2 gl2, GLU glu, GLUquadric quadric) {
+        void drawNode(GL2 gl2, GLU glu, GLUquadric quadric, boolean filled) {
             gl2.glPushMatrix();
-            // Set component colour
-            gl2.glColor3f(1,0.25f,0);
-
-            // Rotate
-            gl2.glRotated(90, 1, 0, 0);
-
-            // Set the size of the component (X, Y, Z)
-            gl2.glScaled(radius/5, radius/8, 1);
-
-            // Draw the component
-            glu.gluSphere(quadric, radius, 15, 15);
-
+                gl2.glColor3f(1,0.25f,0);
+                gl2.glRotated(90, 1, 0, 0);
+                gl2.glScaled(radius/5, radius/8, 1);
+                glu.gluSphere(quadric, radius, 15, 15);
             gl2.glPopMatrix();
         }
     }
 
     private class SubmarineSail extends SubmarineComponent {
 
-        SubmarineSail(double radius, double height, RotationAxis axis) {
+        SubmarineSail(double radius, double height, ROTATION_AXIS axis) {
             super(radius, height, axis);
         }
 
         @Override
-        void drawNode (GL2 gl2, GLU glu, GLUquadric quadric){
+        void drawNode (GL2 gl2, GLU glu, GLUquadric quadric, boolean filled) {
             gl2.glPushMatrix();
-            // Set component colour
-            gl2.glColor3f(1,0.2f,0);
-
-            // Set the size of the component (X, Y, Z)
-            gl2.glScaled(radius, height, height);
-
-            // Draw the component
-            glu.gluCylinder(quadric, radius, radius/1.5f, height*1.5,4, 4);
+                gl2.glColor3f(1,0.2f,0);
+                gl2.glScaled(radius, height, height);
+                glu.gluCylinder(quadric, radius, radius/1.5f, height*2,4, 4);
             gl2.glPopMatrix();
         }
     }
